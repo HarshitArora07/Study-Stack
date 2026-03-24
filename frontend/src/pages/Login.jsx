@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import axios from "axios"
+import { API_BASE } from "../utils/api" // ✅ import API_BASE
 
 function Login() {
   const navigate = useNavigate()
@@ -20,26 +21,17 @@ function Login() {
     e.preventDefault()
     setError("")
 
-     try {
-    const { data } = await axios.post(
-      "http://localhost:5000/api/auth/login",
-      form
-    )
+    try {
+      const { data } = await axios.post(`${API_BASE}/api/auth/login`, form)
 
-    const userData = data.user || {
-      name: data.name,
-      email: data.email
-    }
+      const userData = data.user || { name: data.name, email: data.email }
 
-    // ✅ store
-    localStorage.setItem("token", data.token)
-    localStorage.setItem("user", JSON.stringify(userData))
+      // ✅ store in localStorage
+      localStorage.setItem("token", data.token)
+      localStorage.setItem("user", JSON.stringify(userData))
+      localStorage.setItem("guest", "false")
 
-    // 🔥 IMPORTANT
-    localStorage.setItem("guest", "false")
-
-    navigate("/home")
-
+      navigate("/home")
     } catch (err) {
       setError(
         err.response?.data?.message ||
@@ -64,9 +56,7 @@ function Login() {
         </p>
 
         {error && (
-          <p className="text-red-500 text-center text-sm mb-4">
-            {error}
-          </p>
+          <p className="text-red-500 text-center text-sm mb-4">{error}</p>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -112,15 +102,13 @@ function Login() {
           {/* Google Login */}
           <button
             type="button"
-            onClick={() =>
-              window.location.href =
-                "http://localhost:5000/api/auth/google"
-            }
+            onClick={() => (window.location.href = `${API_BASE}/api/auth/google`)}
             className="w-full flex items-center justify-center gap-2 border p-3 rounded-lg hover:bg-gray-100"
           >
             <img
               src="https://www.svgrepo.com/show/475656/google-color.svg"
               className="w-5 h-5"
+              alt="Google"
             />
             Continue with Google
           </button>

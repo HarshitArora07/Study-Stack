@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import axios from "axios"
+import { API_BASE } from "../utils/api" // ✅ import API_BASE
 
 function Register() {
   const navigate = useNavigate()
@@ -24,26 +25,16 @@ function Register() {
     setLoading(true)
 
     try {
-    const { data } = await axios.post(
-      "http://localhost:5000/api/auth/register",
-      form
-    )
+      const { data } = await axios.post(`${API_BASE}/api/auth/register`, form)
 
-    // ✅ store
-    localStorage.setItem("token", data.token)
-    localStorage.setItem("user", JSON.stringify(data.user))
+      // ✅ store in localStorage
+      localStorage.setItem("token", data.token)
+      localStorage.setItem("user", JSON.stringify(data.user))
+      localStorage.setItem("guest", "false")
 
-    // 🔥 IMPORTANT
-    localStorage.setItem("guest", "false")
-
-    navigate("/home")
-
-
+      navigate("/home")
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-        "Registration failed"
-      )
+      setError(err.response?.data?.message || "Registration failed")
     } finally {
       setLoading(false)
     }
@@ -63,16 +54,12 @@ function Register() {
           Start your learning journey today
         </p>
 
-        {/* ERROR */}
         {error && (
-          <p className="text-red-500 text-center text-sm mb-4">
-            {error}
-          </p>
+          <p className="text-red-500 text-center text-sm mb-4">{error}</p>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
 
-          {/* Name */}
           <div>
             <label className="text-sm text-gray-600">Full Name</label>
             <input
@@ -86,7 +73,6 @@ function Register() {
             />
           </div>
 
-          {/* Email */}
           <div>
             <label className="text-sm text-gray-600">Email</label>
             <input
@@ -100,7 +86,6 @@ function Register() {
             />
           </div>
 
-          {/* Password */}
           <div>
             <label className="text-sm text-gray-600">Password</label>
             <input
@@ -114,7 +99,6 @@ function Register() {
             />
           </div>
 
-          {/* Register Button */}
           <button
             type="submit"
             disabled={loading}
@@ -124,20 +108,16 @@ function Register() {
             {loading ? "Creating..." : "Register"}
           </button>
 
-          {/* Divider */}
           <div className="flex items-center my-4">
-            <div className="flex-grow border-t"></div>
+            <div className="grow border-t"></div>
             <span className="mx-2 text-sm text-gray-500">OR</span>
-            <div className="flex-grow border-t"></div>
+            <div className="grow border-t"></div>
           </div>
 
           {/* Google Signup */}
           <button
             type="button"
-            onClick={() =>
-              window.location.href =
-                "http://localhost:5000/api/auth/google"
-            }
+            onClick={() => (window.location.href = `${API_BASE}/api/auth/google`)}
             className="w-full flex items-center justify-center gap-2 border p-3 rounded-lg hover:bg-gray-100 transition"
           >
             <img
@@ -150,7 +130,6 @@ function Register() {
 
         </form>
 
-        {/* Footer */}
         <p className="text-center mt-6 text-sm text-gray-600">
           Already have an account?{" "}
           <Link to="/login" className="text-indigo-600 font-semibold hover:underline">
