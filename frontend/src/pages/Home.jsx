@@ -31,7 +31,7 @@ export default function Home() {
     <Layout>
       {/* 🔝 Top Section */}
       <div className="mb-8 md:mb-10">
-        <h1 className="text-2xl md:text-3xl font-semibold text-gray-800 mb-2">
+        <h1 className="text-2xl md:text-3xl font-semibold text-white mb-2">
   {isGuest
     ? "Welcome Guest 👋"
     : `Welcome back, ${user?.name || "User"} 👋`}
