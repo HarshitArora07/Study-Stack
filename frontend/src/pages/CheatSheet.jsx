@@ -2,6 +2,7 @@ import Layout from "../components/Layout";
 import { useState } from "react";
 import axios from "axios";
 import { jsPDF } from "jspdf";
+import { API_BASE } from "../api";
 
 export default function CheatSheet() {
   const [file, setFile] = useState(null);
@@ -26,9 +27,9 @@ export default function CheatSheet() {
       if (text) formData.append("text", text);
 
       const res = await axios.post(
-        "http://localhost:5000/api/cheatsheet/generate",
-        formData
-      );
+  `${API_BASE}/api/cheatsheet/generate`,
+  formData
+);
 
       setResult(res.data);
     } catch (err) {

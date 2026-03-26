@@ -17,8 +17,19 @@ require("./config/passport"); // your existing passport config
 const app = express();
 
 // ✅ CORS (allow frontend)
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://study-stack-one.vercel.app"
+];
+
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true
 }));
 

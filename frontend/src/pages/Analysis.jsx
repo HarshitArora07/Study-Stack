@@ -1,5 +1,6 @@
 import Layout from "../components/Layout"
 import { useState } from "react"
+import { API_BASE } from "../api";
 
 export default function Analysis() {
   const [text, setText] = useState("")
@@ -36,7 +37,7 @@ export default function Analysis() {
       setScore(null)
       setAnswers({})
 
-      const res = await fetch("http://localhost:5000/api/quiz/generate", {
+      const res = await fetch(`${API_BASE}/api/quiz/generate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

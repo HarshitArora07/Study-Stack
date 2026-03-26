@@ -1,6 +1,7 @@
 import Layout from "../components/Layout";
 import { useState } from "react";
 import axios from "axios";
+import { API_BASE } from "../api";
 
 export default function CodeHelper() {
   const [code, setCode] = useState("");
@@ -31,11 +32,9 @@ const handleCopy = async (text) => {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/code/analyze",
-        { code,
-          userId: localStorage.getItem("userId")
-         }
-      );
+  `${API_BASE}/api/code/analyze`,
+  { code, userId: localStorage.getItem("userId") }
+);
 
       setResult(res.data);
     } catch (err) {
