@@ -1,6 +1,6 @@
 import Layout from "../components/Layout"
 import { useState } from "react"
-import { API_BASE } from "../api";
+import { API_BASE } from "../utils/api";
 
 export default function Analysis() {
   const [text, setText] = useState("")
