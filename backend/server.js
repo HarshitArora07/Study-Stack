@@ -58,6 +58,10 @@ app.use("/api/quiz", quizRoutes);
 // ✅ Cheat Sheet Routes
 app.use("/api/cheatsheet", cheatSheetRoutes);
 
+// ✅ Test route
+app.get("/", (req, res) => {
+  res.send("Backend is running successfully 🚀");
+});
 
 // ✅ MongoDB Connection
 mongoose.connect(process.env.MONGO_URI)
