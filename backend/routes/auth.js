@@ -1,54 +1,50 @@
 // backend/routes/auth.js
-const express = require("express");
-const router = express.Router();
-const passport = require("passport");
-const jwt = require("jsonwebtoken");
-const { register, login } = require("../controllers/authController");
+const express = require("express")
+const router = express.Router()
+const passport = require("passport")
+const jwt = require("jsonwebtoken")
+const { register, login } = require("../controllers/authController")
 
 // ================= NORMAL AUTH =================
-router.post("/register", register);
-router.post("/login", login);
+router.post("/register", register)
+router.post("/login", login)
 
 // ================= GOOGLE AUTH =================
-
-// 1️⃣ Start Google OAuth
+// 1️⃣ Start Google OAuth login
 router.get(
   "/google",
-  passport.authenticate("google", { scope: ["profile", "email"], prompt: "select_account" })
-);
+  passport.authenticate("google", { scope: ["profile", "email"] })
+)
 
-// 2️⃣ Google Callback
-router.get("/google/callback", (req, res, next) => {
-  passport.authenticate("google", { session: false }, (err, user, info) => {
-    try {
-      if (err || !user) {
-        console.error("❌ Auth Failed:", err || "No user found");
-        // Redirect to frontend login with an error flag
-        return res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_failed`);
-      }
-
-      // 🔑 Generate JWT
-      const token = jwt.sign(
-        { id: user._id }, 
-        process.env.JWT_SECRET, 
-        { expiresIn: "7d" }
-      );
-
-      // 🌐 Secure Redirection
-      // Note: Passing the token in the fragment (#) is slightly safer than (?) 
-      // because fragments aren't usually sent to the server in HTTP requests.
-      const redirectURL = new URL(`${process.env.FRONTEND_URL}/auth/callback`);
-      redirectURL.searchParams.append("token", token);
-      redirectURL.searchParams.append("name", user.name);
-      
-      console.log("✅ Auth Successful. Redirecting...");
-      return res.redirect(redirectURL.toString());
-      
-    } catch (error) {
-      console.error("❌ Catch Block Error:", error);
-      return res.redirect(`${process.env.FRONTEND_URL}/login?error=server_error`);
+// 2️⃣ Google OAuth callback — session: true so req.user is populated
+router.get(
+  "/google/callback",
+  passport.authenticate("google", {
+    failureRedirect: `${process.env.FRONTEND_URL}/login`,
+    session: true, // ✅ FIXED: was false — req.user was undefined in callback
+  }),
+  (req, res) => {
+    // Guard: if user not attached somehow, send to login
+    if (!req.user) {
+      console.error("❌ req.user is undefined after Google auth")
+      return res.redirect(`${process.env.FRONTEND_URL}/login`)
     }
-  })(req, res, next);
-});
 
-module.exports = router;
+    console.log("✅ Auth Successful. User:", req.user.email)
+
+    // Generate JWT
+    const token = jwt.sign(
+      { id: req.user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    )
+
+    const redirectURL = `${process.env.FRONTEND_URL}/auth/google/success?token=${token}&name=${encodeURIComponent(req.user.name)}&email=${encodeURIComponent(req.user.email)}`
+
+    console.log("🔀 Redirecting to:", redirectURL)
+
+    res.redirect(redirectURL)
+  }
+)
+
+module.exports = router

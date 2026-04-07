@@ -1,29 +1,67 @@
 import { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import Layout from "../components/Layout"
 import { API_BASE } from "../utils/api"
 
 export default function Home() {
+  const navigate = useNavigate()
+
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  const token = localStorage.getItem("token")
-  const user = JSON.parse(localStorage.getItem("user"))
-  const isGuest = !token
+  const [user, setUser] = useState(null)
+  const [isGuest, setIsGuest] = useState(true)
+  const [token, setToken] = useState(null)
 
   useEffect(() => {
-    if (!isGuest && token) {
+    const storedToken = localStorage.getItem("token")
+    const guestFlag = localStorage.getItem("guest")
+    const storedUser = localStorage.getItem("user")
+
+    // ✅ Explicit booleans — no ambiguity with string "false"
+    const isLoggedIn = !!storedToken
+    const isGuestMode = guestFlag === "true"
+
+    // 🚨 If neither logged in nor guest → redirect to landing
+    if (!isLoggedIn && !isGuestMode) {
+      navigate("/", { replace: true })
+      return
+    }
+
+    // ✅ Set states
+    setToken(storedToken)
+    setIsGuest(isGuestMode)
+
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser))
+      } catch (e) {
+        console.error("User parse error:", e)
+      }
+    }
+
+    // ✅ Fetch dashboard only if logged in (not guest)
+    if (isLoggedIn && !isGuestMode) {
       fetch(`${API_BASE}/api/dashboard`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${storedToken}` }
       })
         .then(res => res.json())
         .then(resData => setData(resData))
-        .catch(err => console.log(err))
+        .catch(err => console.error("Dashboard fetch error:", err))
         .finally(() => setLoading(false))
     } else {
       setLoading(false)
     }
-  }, [])
+  }, [navigate])
+
+  // ⏳ Prevent flicker while checking auth
+  if (loading) {
+    return (
+      <Layout>
+        <div className="text-white">Loading...</div>
+      </Layout>
+    )
+  }
 
   const features = [
     {
@@ -87,7 +125,7 @@ export default function Home() {
           )}
         </div>
 
-        {/* ─── STATS (logged in only) ─── */}
+        {/* ─── STATS ─── */}
         {!isGuest && (
           <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
             {[
@@ -102,13 +140,15 @@ export default function Home() {
               >
                 <p className="text-xl mb-1">{stat.icon}</p>
                 <p className="text-gray-400 text-xs">{stat.label}</p>
-                <p className="text-white text-2xl font-bold mt-1">{loading ? "—" : stat.value}</p>
+                <p className="text-white text-2xl font-bold mt-1">
+                  {loading ? "—" : stat.value}
+                </p>
               </div>
             ))}
           </div>
         )}
 
-        {/* ─── FEATURE CARDS ─── */}
+        {/* ─── FEATURES ─── */}
         <div>
           <h2 className="text-white font-semibold text-lg mb-4">
             {isGuest ? "✨ What You Can Do" : "⚡ Quick Actions"}
@@ -135,7 +175,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ─── ACTIVITY + INSIGHTS (logged in only) ─── */}
+        {/* ─── ACTIVITY + INSIGHTS ─── */}
         {!isGuest && !loading && (
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="bg-white/10 border border-white/10 rounded-2xl p-5 backdrop-blur-sm">
@@ -170,7 +210,13 @@ export default function Home() {
         {isGuest && (
           <div className="flex items-start gap-3 bg-yellow-500/10 border border-yellow-400/30 rounded-2xl p-4 text-sm text-yellow-300">
             <span className="text-lg">⚠️</span>
-            <p>You're in guest mode. Your work won't be saved. <Link to="/register" className="underline font-medium hover:text-yellow-200">Create a free account</Link> to save everything.</p>
+            <p>
+              You're in guest mode. Your work won't be saved.{" "}
+              <Link to="/register" className="underline font-medium hover:text-yellow-200">
+                Create a free account
+              </Link>{" "}
+              to save everything.
+            </p>
           </div>
         )}
 
