@@ -10,35 +10,42 @@ passport.use(
       callbackURL: `${process.env.BACKEND_URL}/api/auth/google/callback`,
     },
     async (accessToken, refreshToken, profile, done) => {
-      try {
-        const email = profile.emails[0].value
+  try {
+    console.log("Google Profile:", profile);
 
-        // ✅ Find by email (IMPORTANT)
-        let user = await User.findOne({ email })
+    const email =
+      profile.emails && profile.emails.length > 0
+        ? profile.emails[0].value
+        : null;
 
-        if (user) {
-          // attach googleId if missing
-          if (!user.googleId) {
-            user.googleId = profile.id
-            await user.save()
-          }
-
-          return done(null, user)
-        }
-
-        // create new user
-        user = await User.create({
-          googleId: profile.id,
-          name: profile.displayName,
-          email: email
-        })
-
-        return done(null, user)
-
-      } catch (err) {
-        return done(err, null)
-      }
+    if (!email) {
+      console.error("No email found from Google");
+      return done(new Error("No email found"), null);
     }
+
+    let user = await User.findOne({ email });
+
+    if (user) {
+      if (!user.googleId) {
+        user.googleId = profile.id;
+        await user.save();
+      }
+      return done(null, user);
+    }
+
+    user = await User.create({
+      googleId: profile.id,
+      name: profile.displayName,
+      email: email
+    });
+
+    return done(null, user);
+
+  } catch (err) {
+    console.error("Passport Error:", err);
+    return done(err, null);
+  }
+}
   )
 )
 
