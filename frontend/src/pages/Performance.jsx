@@ -102,6 +102,7 @@ export default function Performance() {
   const [loading, setLoading] = useState(true)
   const [token, setToken] = useState(null)
   const [tooltip, setTooltip] = useState(null) // { text, x, y }
+  const [weekIndex, setWeekIndex] = useState(0)
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token")
@@ -197,6 +198,15 @@ export default function Performance() {
 
   // Build the correctly-aligned calendar grid
   const calendarGrid   = buildCalendarGrid(calendarData)
+  // Split into weeks (7 days each)
+const weeks = []
+for (let i = 0; i < calendarGrid.length; i += 7) {
+  weeks.push(calendarGrid.slice(i, i + 7))
+}
+
+// Start from latest week
+const currentWeek = weeks[weeks.length - 1 - weekIndex] || []
+const maxCount = Math.max(...currentWeek.map(d => d?.count || 0), 1)
   const calendarWeeks  = calendarGrid.length / 7   // number of rows
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -457,11 +467,38 @@ export default function Performance() {
           inside tiny squares, saving significant vertical space.
         */}
         <div className="bg-white/5 border border-white/10 rounded-2xl p-5 md:p-6 backdrop-blur-sm">
-          <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-indigo-400" strokeWidth={1.5} />
-            Activity Calendar
-            <span className="text-gray-500 text-xs font-normal ml-1">— last 35 days</span>
-          </h3>
+          <div className="flex items-center justify-between mb-3">
+  <h3 className="text-white font-semibold flex items-center gap-2">
+    <Calendar className="w-5 h-5 text-indigo-400" strokeWidth={1.5} />
+    Activity Calendar
+  </h3>
+
+  <div className="flex gap-2">
+    <button
+  disabled={weekIndex === weeks.length - 1}
+  onClick={() => setWeekIndex((prev) => Math.min(prev + 1, weeks.length - 1))}
+  className={`px-3 py-1.5 text-xs rounded-md border transition-all
+    ${weekIndex === weeks.length - 1 
+      ? "opacity-30 cursor-not-allowed" 
+      : "text-white bg-indigo-500/20 hover:bg-indigo-500/40 border-indigo-400/30"}
+  `}
+>
+  Prev
+</button>
+
+    <button
+  disabled={weekIndex === 0}
+  onClick={() => setWeekIndex((prev) => Math.max(prev - 1, 0))}
+  className={`px-3 py-1.5 text-xs rounded-md border transition-all
+    ${weekIndex === 0 
+      ? "text-indigo-400 cursor-not-allowed" 
+      : "text-white bg-indigo-500/20 hover:bg-indigo-500/40 border-indigo-400/30"}
+  `}
+>
+  Next
+</button>
+  </div>
+</div>
 
           {calendarGrid.length > 0 ? (
             <div className="overflow-x-auto">
@@ -474,51 +511,55 @@ export default function Performance() {
 
               {/* Calendar cells — compact rows */}
               <div
-                className="grid grid-cols-7 gap-1 auto-rows-[20px"
+                className="grid grid-cols-7 gap-4 items-end h-32"
                 style={{ minWidth: 196 }}
               >
-                {calendarGrid.map((day, i) => {
-                  if (!day) {
-                    // Empty padding cell
-                    return <div key={`pad-${i}`} className="w-full h-5 rounded-sm" />
-                  }
+                {currentWeek.map((day, i) => {
+  if (!day) return <div key={i} />
 
-                  const intensity =
-                    day.count === 0 ? 0
-                    : day.count < 3 ? 0.35
-                    : day.count < 6 ? 0.65
-                    : 1
+  const height = (day.count / maxCount) * 80
 
-                  const isToday =
-                    day.date === new Date().toISOString().slice(0, 10)
+  const isToday =
+    day.date === new Date().toISOString().slice(0, 10)
 
-                  return (
-                    <div
-                      key={day.date}
-                      className={`
-                        aspect-square rounded-sm transition-all
-                        hover:scale-110 cursor-default group relative
-                        ${isToday ? "ring-1 ring-indigo-400/60" : ""}
-                      `}
-                      style={{
-                        backgroundColor:
-                          day.count === 0
-                            ? "rgba(255,255,255,0.04)"
-                            : `rgba(99,102,241,${intensity})`,
-                        border: day.count > 0 ? "1px solid rgba(99,102,241,0.25)" : "1px solid transparent"
-                      }}
-                    >
-                      {/* Tooltip */}
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 bg-gray-900 border border-white/10 text-white text-[10px] px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20 shadow-lg">
-                        <span className="text-gray-400">{day.date}</span>
-                        <br />
-                        <span className={day.count > 0 ? "text-indigo-300 font-medium" : "text-gray-500"}>
-                          {day.count} {day.count === 1 ? "activity" : "activities"}
-                        </span>
-                      </div>
-                    </div>
-                  )
-                })}
+  return (
+    <div
+      key={day.date}
+      className="flex flex-col items-center justify-end group relative"
+    >
+      {/* BAR */}
+      <div
+        className={`
+  w-6 rounded-t-md transition-all duration-500
+  ${isToday ? "ring-2 ring-indigo-400" : ""}
+`}
+        style={{
+          height: `${Math.max(height, 6)}px`,
+          backgroundColor:
+  day.count === 0
+    ? "rgba(255,255,255,0.08)"
+    : `rgba(99,102,241,${0.4 + (day.count / maxCount) * 0.6})`
+        }}
+      />
+
+      {/* DAY NAME */}
+      <span className="text-xs text-gray-300 mt-2 font-medium">
+        {["S","M","T","W","T","F","S"][i]}
+      </span>
+
+      {/* TOOLTIP */}
+      <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 
+bg-black/90 text-white text-[11px] px-2 py-1.5 rounded-md 
+opacity-0 group-hover:opacity-100 transition-all duration-200 
+whitespace-nowrap z-50 shadow-lg border border-white/10">
+        <span className="text-gray-300">{day.date}</span><br/>
+<span className="text-indigo-300 font-medium">
+  {day.count} {day.count === 1 ? "activity" : "activities"}
+</span>
+      </div>
+    </div>
+  )
+})}
               </div>
 
               {/* Legend */}
