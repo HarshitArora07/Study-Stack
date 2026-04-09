@@ -8,6 +8,7 @@ import CodeHelper from "./pages/CodeHelper"
 import Analysis from "./pages/Analysis"
 import CheatSheet from "./pages/CheatSheet"
 import History from "./pages/History"
+import Performance from "./pages/Performance"
 import GoogleSuccess from "./pages/GoogleSuccess"
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
         <Route path="/cheatsheet" element={<CheatSheet />} />
 
         <Route path="/history" element={<History />} />
+        <Route path="/performance" element={<Performance />} />
 
         <Route path="/auth/google/success" element={<GoogleSuccess />} />
         <Route path="*" element={<Navigate to="/" />} />

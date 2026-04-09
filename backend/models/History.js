@@ -18,6 +18,7 @@ const historySchema = new mongoose.Schema({
   improvements: [String],
   refactoredCode: String,
   explanation: String,
+  detectedLanguage: String, // e.g., "javascript", "python"
 
   // Quiz
   questions: [
@@ -25,17 +26,27 @@ const historySchema = new mongoose.Schema({
       question: String,
       options: [String],
       answer: String,
-      explanation: String
+      explanation: String,
+      topic: String // extracted topic from question
     }
   ],
   score: Number,
   totalQuestions: Number,
+  quizTopics: [String], // aggregated topics from all questions
 
   // Cheat Sheet
   cheatSheet: String,
   importantTopics: [String],
   repeatedTopics: [String],
   contentType: String,
+  extractedTopics: [String], // normalized/cleaned topics
+
+  // General
+  metadata: {
+    language: String,
+    difficulty: { type: String, enum: ["beginner", "intermediate", "advanced"] },
+    source: String // e.g., "uploaded file", "pasted text"
+  }
 
 }, { timestamps: true })
 

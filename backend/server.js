@@ -1,73 +1,76 @@
-// server.js
-require("dotenv").config();
+ require("dotenv").config();
 
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const session = require("express-session");
-const passport = require("passport");
+  const express = require("express");
+  const mongoose = require("mongoose");
+  const cors = require("cors");
+  const session = require("express-session");
+  const passport = require("passport");
 
-const quizRoutes = require("./routes/quiz");
-const cheatSheetRoutes = require("./routes/cheatsheet");
-const codeRoutes = require("./routes/code");         // CodeHelper route
+  const quizRoutes = require("./routes/quiz");
+  const cheatSheetRoutes = require("./routes/cheatsheet");
+  const codeRoutes = require("./routes/code");
+  const dashboardRoutes = require("./routes/dashboard");
 
 
-require("./config/passport"); // your existing passport config
+  require("./config/passport");
 
-const app = express();
+  const app = express();
 
-// ✅ CORS (allow frontend)
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://study-stack-one.vercel.app"
-];
+  const allowedOrigins = [
+    "http://localhost:5173",
+    "https://study-stack-one.vercel.app"
+  ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true
-}));
+  app.use(cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true
+  }));
 
-// ✅ JSON parser
-app.use(express.json());
+  app.use(express.json());
 
-// ✅ Session (for Google OAuth)
-app.use(session({
-  secret: process.env.SESSION_SECRET || "secret",
-  resave: false,
-  saveUninitialized: true
-}));
+  app.use(session({
+    secret: process.env.SESSION_SECRET || "secret",
+    resave: false,
+    saveUninitialized: true
+  }));
 
-app.use(passport.initialize());
-app.use(passport.session());
+  app.use(passport.initialize());
+  app.use(passport.session());
 
-// ✅ Auth Routes
-app.use("/api/auth", require("./routes/auth"));
+  // ✅ Auth Routes
+  app.use("/api/auth", require("./routes/auth"));
 
-// ✅ CodeHelper Route using OpenRouter StarCoder2-3B
-app.use("/api/code", codeRoutes);
+  // ✅ Code Helper Route
+  app.use("/api/code", codeRoutes);
 
-// ✅ Quiz Routes
-app.use("/api/quiz", quizRoutes);
+  // ✅ Quiz Routes
+  app.use("/api/quiz", quizRoutes);
 
-// ✅ Cheat Sheet Routes
-app.use("/api/cheatsheet", cheatSheetRoutes);
+  // ✅ Cheat Sheet Routes
+  app.use("/api/cheatsheet", cheatSheetRoutes);
 
-// ✅ Test route
-app.get("/", (req, res) => {
-  res.send("Backend is running successfully 🚀");
-});
+  // ✅ History Routes
+  app.use("/api/history", require("./routes/history"));
 
-// ✅ MongoDB Connection
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected ✅"))
-  .catch(err => console.error("MongoDB Connection Error:", err));
+  // ✅ Dashboard Routes
+  app.use("/api/dashboard", dashboardRoutes);
 
-// ✅ Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT} 🚀`));
+  // ✅ Test route
+  app.get("/", (req, res) => {
+    res.send("Backend is running successfully 🚀");
+  });
+
+  // ✅ MongoDB Connection
+  mongoose.connect(process.env.MONGO_URI)
+    .then(() => console.log("MongoDB Connected ✅"))
+    .catch(err => console.error("MongoDB Connection Error:", err));
+
+  // ✅ Start server
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`Server running on port ${PORT} 🚀`));
